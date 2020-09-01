@@ -22,6 +22,8 @@ function command_yes_no_prmp {
 	then
 		eval $1
 	fi
+	echo done!
+	echo
 }
 
 
@@ -51,7 +53,7 @@ do
 	echo "2) vsftp"
 	echo	
 
-        read category
+        read -p "Your choice: " category
 done
 
 echo
@@ -70,18 +72,18 @@ case $category in
 			echo "7) stop apache"
 			echo "8) restart apache"
 			echo
-			echo "9) disable directory listing and follow sysmbolic links"
+			echo "9) disable directory listing and follow symbolic links"
 			echo
 			echo "10) run apache on boot"
 			echo
-			echo "11) Add new virtual server"
+			echo "11) add new virtual server"
 			echo
 			echo "12) enable ssl"
 			echo
 			echo "13) install php"
 			echo
 
-			read apache_option			
+			read -p "Your choice: " apache_option			
 		done		
 
 		case $apache_option in
@@ -92,7 +94,7 @@ case $category in
                                 command_yes_no_prmp "rpm -qc httpd"
 				;;
 			3) # print main configuration ($APACHE_CONF_PATH)
-				command_yes_no_prmp "cat $APACHE_CONF_PATH | grep -v -e \"^\s*#\" -e \"^\s*$\""
+				command_yes_no_prmp "grep -v -e \"^\s*#\" -e \"^\s*$\" $APACHE_CONF_PATH | less"
                                 ;;
 			4) # test config
 				command_yes_no_prmp "apachectl configtest"
@@ -113,7 +115,7 @@ case $category in
                                 ;;
 
 
-			9) # disable directory listing and follow sysmbolic links"
+			9) # disable directory listing and follow symbolic links"
 				echo "It it recommend to make a backup of the config file"
 				command_yes_no_prmp "cp /etc/httpd/conf/httpd.conf /etc/httpd/conf/httpd.conf.bak"
 				command_yes_no_prmp "sed -i.sed.bak -r -e 's/(Options.*)(Indexes)/\1/g' -e 's/(Options.*)FollowSymLinks/\1/g' $APACHE_CONF_PATH && systemctl reload httpd"
@@ -122,39 +124,39 @@ case $category in
 				command_yes_no_prmp "systemctl enable httpd"
 				;;
 
-			11) # Add new virtual server
-				echo Please Enter the next details for the new virtual host
+			11) # add new virtual server
+				echo Please enter the next details for the new virtual host
 				echo
 
 				while [[ -z $server_admin ]]
 				do
-					read -p "Enter server admin email (example: myeamil@site1.com) : " server_admin
+					read -p "Enter server admin email (example: admin@website.com) : " server_admin
 		
 				done
 
 				while [[ -z $document_root ]]
 				do
-					read -p "Enter Document root directory (example: /var/www/html/site1) : " document_root
+					read -p "Enter document root directory (example: /var/www/html/website) : " document_root
 				done
 
 				while  [[ -z $server_name ]]
 				do
-					read -p "Enter server name (exmple: site1.com) : " server_name
+					read -p "Enter server name (exmple: website.com) : " server_name
 				done
 
 				while [[ -z $server_alias ]]
 				do
-					read -p "Enter alternative server name (example: www.site1.com) : " server_alias
+					read -p "Enter alternative server name (example: www.website.com) : " server_alias
 				done
 
 				while  [[ -z $error_log ]]
 				do
-					read -p "Enter a path for error logs (example: logs/site1_error_log) : " error_log
+					read -p "Enter a path for error logs (example: logs/website_error_log) : " error_log
 				done
 
 				while  [[ -z $custom_log ]]
 				do
-					read -p "Enter a path for custom logs (example: logs/site1_access_log) : " custom_log
+					read -p "Enter a path for custom logs (example: logs/website_access_log) : " custom_log
 				done
 				
 				new_virtual_host_conf_file=$VIRTUALHOST_CONF_PATH/$server_name.conf
@@ -181,6 +183,8 @@ case $category in
 						echo "</VirtualHost>" >> $new_virtual_host_conf_file
 						echo "This is \"$server_name\"" >> $document_root/index.html
 						systemctl reload httpd
+						echo done!
+
 					fi
 				fi
 				;;
@@ -192,19 +196,20 @@ case $category in
 				then
 					if [ -f /etc/httpd/conf.d/ssl.conf ]
 					then
-						echo SSL is Already configured.
-						echo Congratulations !!
+						echo SSL is already configured!
 					else
 						yum install mod_ssl openssl -y
 						systemctl restart httpd
+						echo done!
 					fi
 				fi
 				;;
 			13) # install php
-				command_yes_no_prmp "yum install php -y"
+				command_yes_no_prmp "yum install php -y" > /dev/null
 				if [[ -z $reply ]] || [[ $reply =~ $REGEX_YES ]]
 				then
 					systemctl restart httpd
+					echo done!
 				fi
 				;;
 		
@@ -226,7 +231,7 @@ case $category in
 			echo "6) jail users to their home directories"
 
 			echo
-			read vsftp_option
+			read -p "Your choice: " vsftp_option
 
 		done
 
@@ -263,6 +268,7 @@ case $category in
 					echo chroot_local_user=YES >> $VSFTP_CONF_PATH
 					echo allow_writeable_chroot=YES >> $VSFTP_CONF_PATH
 					systemctl restart vsftpd
+					echo done!
                                 fi
 				;;
 		esac
